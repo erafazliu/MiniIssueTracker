@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\IssueController;
 use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,10 +22,7 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     Route::resource('projects', ProjectController::class);
-
-    Route::get('/issues', function () {
-        return view('issues.index');
-    })->name('issues.index');
+    Route::resource('issues', IssueController::class);
 
     Route::get('/tags', function () {
         return view('tags.index');

@@ -39,4 +39,23 @@
         </div>
     </div>
 </div>
+
+<div class="panel">
+    <div class="panel-heading">
+        <h2>Issues</h2>
+        <a class="button primary" href="{{ route('issues.create', ['project_id' => $project->id]) }}">New issue</a>
+    </div>
+
+    @if($project->issues->isEmpty())
+        <div class="empty">
+            <p>No issues on this project yet.</p>
+        </div>
+    @else
+        <div class="issues-list">
+            @foreach($project->issues as $issue)
+                @include('issues.partials.row', ['issue' => $issue])
+            @endforeach
+        </div>
+    @endif
+</div>
 @endsection

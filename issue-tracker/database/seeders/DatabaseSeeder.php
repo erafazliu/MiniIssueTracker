@@ -13,10 +13,17 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-
-        User::factory()->create([
-            'name' => 'Era Fazliu',
+        $owner = User::query()->firstOrCreate([
             'email' => 'owner@example.com',
+        ], [
+            'name' => 'Era Fazliu',
+            'password' => bcrypt('password'),
+        ]);
+
+        $member = User::query()->firstOrCreate([
+            'email' => 'member@example.com',
+        ], [
+            'name' => 'Arber Fazliu',
             'password' => bcrypt('password'),
         ]);
     }
