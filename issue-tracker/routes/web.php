@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -19,10 +20,7 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // Minimal pages so navigation links resolve
-    Route::get('/projects', function () {
-        return view('projects.index');
-    })->name('projects.index');
+    Route::resource('projects', ProjectController::class);
 
     Route::get('/issues', function () {
         return view('issues.index');
