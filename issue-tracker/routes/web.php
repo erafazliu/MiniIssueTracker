@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\IssueController;
+use App\Http\Controllers\IssueTagController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -24,9 +26,15 @@ Route::middleware('auth')->group(function () {
     Route::resource('projects', ProjectController::class);
     Route::resource('issues', IssueController::class);
 
-    Route::get('/tags', function () {
-        return view('tags.index');
-    })->name('tags.index');
+    Route::get('/tags', [TagController::class, 'index'])->name('tags.index');
+    Route::post('/tags', [TagController::class, 'store'])->name('tags.store');
+    Route::delete('/tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
+
+    Route::post('/issues/{issue}/tags/{tag}', [IssueTagController::class, 'store'])
+        ->name('issues.tags.store');
+
+    Route::delete('/issues/{issue}/tags/{tag}', [IssueTagController::class, 'destroy'])
+        ->name('issues.tags.destroy');
 
     Route::post('/logout', [AuthController::class, 'destroy'])
         ->name('logout');

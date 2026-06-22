@@ -43,4 +43,160 @@
         </div>
     </div>
 </div>
+
+<div class="panel">
+    <div class="panel-heading">
+        <h2>Tags</h2>
+        @can('update', $issue->project)
+            <button id="open-tag-modal" class="button primary" type="button">Manage tags</button>
+        @endcan
+    </div>
+
+    <div id="tags-list" class="tag-list">
+        @forelse($issue->tags as $tag)
+            <div class="tag-pill" data-tag-id="{{ $tag->id }}">
+                <span>{{ $tag->name }}</span>
+                @can('update', $issue->project)
+                    <button class="tag-remove" data-issue-id="{{ $issue->id }}" data-tag-id="{{ $tag->id }}">×</button>
+                @endcan
+            </div>
+        @empty
+            <div class="empty">
+                <p>No tags attached to this issue.</p>
+            </div>
+        @endforelse
+    </div>
+</div>
+
+@can('update', $issue->project)
+    <div id="tag-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <button id="close-tag-modal" class="button link-button">Close</button>
+            <h3>Attach tags</h3>
+            <div class="tag-actions">
+                @foreach(App\Models\Tag::orderBy('name')->get() as $tag)
+                    <div class="tag-pill tag-selectable {{ $issue->tags->contains($tag) ? 'selected' : '' }}" data-tag-id="{{ $tag->id }}">
+                        {{ $tag->name }}
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+@endcan
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const openModal = document.getElementById('open-tag-modal');
+        const closeModal = document.getElementById('close-tag-modal');
+        const modal = document.getElementById('tag-modal');
+        const tagsList = document.getElementById('tags-list');
+        const issueId = {{ $issue->id }};
+
+        if (openModal && modal) {
+            openModal.addEventListener('click', () => modal.style.display = 'block');
+        }
+
+        if (closeModal && modal) {
+            closeModal.addEventListener('click', () => modal.style.display = 'none');
+        }
+
+        function createTagPill(tagId, tagName) {
+            const pill = document.createElement('div');
+            pill.className = 'tag-pill';
+            pill.dataset.tagId = tagId;
+
+            const label = document.createElement('span');
+            label.textContent = tagName;
+            pill.appendChild(label);
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'tag-remove';
+            removeButton.dataset.issueId = issueId;
+            removeButton.dataset.tagId = tagId;
+            removeButton.textContent = '×';
+            pill.appendChild(removeButton);
+
+            return pill;
+        }
+
+        function updateEmptyState() {
+            const empty = tagsList.querySelector('.empty');
+            if (tagsList.querySelectorAll('.tag-pill').length === 0) {
+                if (!empty) {
+                    const emptyMessage = document.createElement('div');
+                    emptyMessage.className = 'empty';
+                    emptyMessage.innerHTML = '<p>No tags attached to this issue.</p>';
+                    tagsList.appendChild(emptyMessage);
+                }
+            } else if (empty) {
+                empty.remove();
+            }
+        }
+
+        tagsList?.addEventListener('click', async function (event) {
+            const button = event.target.closest('.tag-remove');
+            if (!button) {
+                return;
+            }
+
+            const tagId = button.dataset.tagId;
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const response = await fetch(`/issues/${issueId}/tags/${tagId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                button.closest('.tag-pill').remove();
+                updateEmptyState();
+                const selectable = document.querySelector(`.tag-selectable[data-tag-id="${tagId}"]`);
+                selectable?.classList.remove('selected');
+            }
+        });
+
+        document.querySelector('.tag-actions')?.addEventListener('click', async function (event) {
+            const tagElement = event.target.closest('.tag-selectable');
+            if (!tagElement) {
+                return;
+            }
+
+            const tagId = tagElement.dataset.tagId;
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const isSelected = tagElement.classList.contains('selected');
+            const url = `/issues/${issueId}/tags/${tagId}`;
+            const method = isSelected ? 'DELETE' : 'POST';
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            tagElement.classList.toggle('selected');
+            const tagName = tagElement.textContent.trim();
+            const existing = tagsList.querySelector(`.tag-pill[data-tag-id="${tagId}"]`);
+
+            if (!isSelected && !existing) {
+                if (tagsList.querySelector('.empty')) {
+                    tagsList.innerHTML = '';
+                }
+                tagsList.appendChild(createTagPill(tagId, tagName));
+            } else if (isSelected && existing) {
+                existing.remove();
+                updateEmptyState();
+            }
+        });
+    });
+</script>
 @endsection
