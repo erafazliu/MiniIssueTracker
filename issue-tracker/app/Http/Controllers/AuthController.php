@@ -22,7 +22,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('projects.index'));
+        return redirect()->intended(route('dashboard'));
     }
 
     public function destroy(): RedirectResponse
