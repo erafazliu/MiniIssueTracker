@@ -12,10 +12,20 @@ class IssueController extends Controller
 
     public function index()
     {
-        $issues = Issue::with('project')
-            ->whereHas('project', fn ($query) => $query->where('owner_id', auth()->id()))
+        $issues = Issue::query()
+            ->whereHas('project', fn ($query) =>
+                $query->where('owner_id', auth()->id())
+            )
+            ->with(['project'])
+            ->when(request()->filled('status'), fn ($query) =>
+                $query->where('status', request('status'))
+            )
+            ->when(request()->filled('priority'), fn ($query) =>
+                $query->where('priority', request('priority'))
+            )
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('issues.index', compact('issues'));
     }
