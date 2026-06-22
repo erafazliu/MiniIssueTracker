@@ -10,6 +10,7 @@
 <body>
 <header class="site-header">
     <a class="brand" href="{{ Route::has('projects.index') ? route('projects.index') : url('/') }}"><span>IF</span> IssueFlow</a>
+    @auth
     <nav>
         @if(Route::has('projects.index'))
             <a class="{{ request()->routeIs('projects.*') ? 'active' : '' }}" href="{{ route('projects.index') }}">Projects</a>
@@ -21,6 +22,7 @@
             <a class="{{ request()->routeIs('tags.*') ? 'active' : '' }}" href="{{ route('tags.index') }}">Tags</a>
         @endif
     </nav>
+    @endauth
     <div class="account">
         @if(auth()->check())
             <span>{{ auth()->user()->name }}</span>

@@ -19,6 +19,19 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
+    // Minimal pages so navigation links resolve
+    Route::get('/projects', function () {
+        return view('projects.index');
+    })->name('projects.index');
+
+    Route::get('/issues', function () {
+        return view('issues.index');
+    })->name('issues.index');
+
+    Route::get('/tags', function () {
+        return view('tags.index');
+    })->name('tags.index');
+
     Route::post('/logout', [AuthController::class, 'destroy'])
         ->name('logout');
 });
