@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         $owner = User::firstOrCreate(
             ['email' => 'owner@example.com'],
             [
-                'name' => 'Era Fazliu',
+                'name' => 'Era Owner',
                 'is_owner' => true,
                 'password' => bcrypt('password'),
             ]
@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
         $member = User::firstOrCreate(
             ['email' => 'member@example.com'],
             [
-                'name' => 'Arber Fazliu',
+                'name' => 'Era Member',
                 'is_owner' => false,
                 'password' => bcrypt('password'),
             ]

@@ -48,20 +48,20 @@ Visit `http://127.0.0.1:8000`
 
 ## Screenshots
 
-### Login
-![Login](screenshots/login.png)
+### Sign In
+![Sign In](./issue-tracker/screenshots/signin.png)
 
 ### Create Project
-![Create Project](screenshots/create-project.png)
+![Create Project](./issue-tracker/screenshots/new-project.png)
 
 ### Create Issue
-![Create Issue](screenshots/create-issue.png)
+![Create Issue](./issue-tracker/screenshots/new-issue.png)
 
 ### Tags Management
-![Tags](screenshots/tags.png)
+![Tags](./issue-tracker/screenshots/tags.png)
 
 ### Issue Details
-![Issue Detail](screenshots/issue-detail.png)
+![Issue Detail](./issue-tracker/screenshots/issue-view.png)
 
 ## Features
 
