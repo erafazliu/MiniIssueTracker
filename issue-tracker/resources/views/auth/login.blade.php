@@ -7,7 +7,7 @@
     <div class="page-heading compact">
         <div>
             <p class="eyebrow">SIGN IN</p>
-            <h1>Welcome back</h1>
+            <h1>Welcome</h1>
         </div>
     </div>
 

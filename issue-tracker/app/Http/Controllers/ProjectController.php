@@ -5,17 +5,31 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class ProjectController extends Controller
 {
-    public function index(): View
+    public function index(Request $request)
     {
         $projects = auth()->user()->projects()
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = '%' . $request->string('search') . '%';
+
+                $query->where(fn ($nested) =>
+                    $nested->where('name', 'like', $search)
+                        ->orWhere('description', 'like', $search)
+                );
+            })
             ->latest()
-            ->paginate(9);
+            ->paginate(9)
+            ->withQueryString();
+
+        if ($request->ajax()) {
+            return view('projects.partials.results', compact('projects'));
+        }
 
         return view('projects.index', compact('projects'));
     }

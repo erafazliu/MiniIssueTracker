@@ -13,8 +13,18 @@
     </div>
 </div>
 
-<form method="GET" action="{{ route('issues.index') }}" class="panel form-panel">
+<form method="GET" action="{{ route('issues.index') }}" class="panel form-panel" id="issues-filter-form">
     <div class="form-grid">
+        <label class="full">
+            Search
+            <input
+                type="search"
+                name="search"
+                value="{{ request('search') }}"
+                placeholder="Search by title or description"
+                autocomplete="off"
+            >
+        </label>
         <label>
             Status
             <select name="status">
@@ -35,22 +45,85 @@
         </label>
         <div class="form-actions" style="align-items:flex-end;">
             <button type="submit" class="button primary">Filter</button>
-            <a class="button secondary" href="{{ route('issues.index') }}">Reset</a>
+            <button type="button" class="button secondary" id="issues-reset-button">Reset</button>
         </div>
     </div>
 </form>
 
-@if($issues->isEmpty())
-    <div class="empty">
-        <p>No issues yet. Create one to get started.</p>
-    </div>
-@else
-    <div class="issues-list">
-        @foreach($issues as $issue)
-            @include('issues.partials.row', ['issue' => $issue])
-        @endforeach
-    </div>
+<div id="issues-results">
+    @include('issues.partials.results', ['issues' => $issues])
+</div>
 
-    {{ $issues->links() }}
-@endif
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('issues-filter-form');
+        const results = document.getElementById('issues-results');
+        const searchInput = form?.querySelector('input[name="search"]');
+        const resetButton = document.getElementById('issues-reset-button');
+        let debounceTimer;
+
+        if (!form || !results) {
+            return;
+        }
+
+        async function updateResults() {
+            const params = new URLSearchParams(new FormData(form));
+            const url = `${form.action}?${params.toString()}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            results.innerHTML = await response.text();
+            history.replaceState({}, '', url);
+        }
+
+        searchInput?.addEventListener('input', function () {
+            window.clearTimeout(debounceTimer);
+            debounceTimer = window.setTimeout(updateResults, 300);
+        });
+
+        form.querySelectorAll('select').forEach(function (select) {
+            select.addEventListener('change', updateResults);
+        });
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            updateResults();
+        });
+
+        resetButton?.addEventListener('click', function () {
+            form.reset();
+            updateResults();
+        });
+
+        results.addEventListener('click', async function (event) {
+            const link = event.target.closest('.pagination a');
+            if (!link) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const response = await fetch(link.href, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            results.innerHTML = await response.text();
+            history.replaceState({}, '', link.href);
+        });
+    });
+</script>
 @endsection

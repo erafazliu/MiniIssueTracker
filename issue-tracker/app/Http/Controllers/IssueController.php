@@ -5,28 +5,42 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreIssueRequest;
 use App\Http\Requests\UpdateIssueRequest;
 use App\Models\Issue;
+use App\Models\Tag;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class IssueController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
         $issues = Issue::query()
             ->whereHas('project', fn ($query) =>
                 $query->where('owner_id', auth()->id())
             )
             ->with(['project'])
-            ->when(request()->filled('status'), fn ($query) =>
-                $query->where('status', request('status'))
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = '%' . $request->string('search') . '%';
+
+                $query->where(fn ($nested) =>
+                    $nested->where('title', 'like', $search)
+                        ->orWhere('description', 'like', $search)
+                );
+            })
+            ->when($request->filled('status'), fn ($query) =>
+                $query->where('status', $request->string('status'))
             )
-            ->when(request()->filled('priority'), fn ($query) =>
-                $query->where('priority', request('priority'))
+            ->when($request->filled('priority'), fn ($query) =>
+                $query->where('priority', $request->string('priority'))
             )
             ->latest()
             ->paginate(10)
             ->withQueryString();
+
+        if ($request->ajax()) {
+            return view('issues.partials.results', compact('issues'));
+        }
 
         return view('issues.index', compact('issues'));
     }
@@ -36,11 +50,13 @@ class IssueController extends Controller
     {
         $projects = auth()->user()->projects()->pluck('name', 'id');
         $users = User::orderBy('name')->get(['id', 'name']);
+        $tags = Tag::orderBy('name')->get(['id', 'name']);
 
         return view('issues.create', [
             'projects' => $projects,
             'projectId' => request('project_id'),
             'users' => $users,
+            'tags' => $tags,
         ]);
     }
 
@@ -49,10 +65,12 @@ class IssueController extends Controller
     {
         $validated = $request->validated();
         $memberIds = $validated['members'] ?? [];
-        unset($validated['members']);
+        $tagIds = $validated['tags'] ?? [];
+        unset($validated['members'], $validated['tags']);
 
         $issue = Issue::create($validated);
         $issue->members()->sync($memberIds);
+        $issue->tags()->sync($tagIds);
 
         return redirect()->route('issues.show', $issue)->with('success', 'Issue created.');
     }
@@ -72,8 +90,9 @@ class IssueController extends Controller
 
         $projects = auth()->user()->projects()->pluck('name', 'id');
         $users = User::orderBy('name')->get(['id', 'name']);
+        $tags = Tag::orderBy('name')->get(['id', 'name']);
 
-        return view('issues.edit', compact('issue', 'projects', 'users'));
+        return view('issues.edit', compact('issue', 'projects', 'users', 'tags'));
     }
 
 
@@ -83,10 +102,12 @@ class IssueController extends Controller
 
         $validated = $request->validated();
         $memberIds = $validated['members'] ?? [];
-        unset($validated['members']);
+        $tagIds = $validated['tags'] ?? [];
+        unset($validated['members'], $validated['tags']);
 
         $issue->update($validated);
         $issue->members()->sync($memberIds);
+        $issue->tags()->sync($tagIds);
 
         return redirect()->route('issues.show', $issue)->with('success', 'Issue updated.');
     }

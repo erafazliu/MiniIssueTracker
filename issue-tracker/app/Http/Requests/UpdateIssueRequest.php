@@ -26,6 +26,8 @@ class UpdateIssueRequest extends FormRequest
             'due_date' => ['nullable', 'date'],
             'members' => ['sometimes', 'array'],
             'members.*' => ['integer', 'distinct', Rule::exists('users', 'id')],
+            'tags' => ['sometimes', 'array'],
+            'tags.*' => ['integer', 'distinct', Rule::exists('tags', 'id')],
         ];
     }
 }

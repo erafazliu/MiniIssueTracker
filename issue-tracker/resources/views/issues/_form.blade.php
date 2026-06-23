@@ -58,6 +58,27 @@
             @endforelse
         </div>
     </fieldset>
+    <fieldset class="full">
+        <legend>Attach tags</legend>
+        <div class="stack">
+            @php
+                $selectedTags = collect(old('tags', isset($issue) ? $issue->tags->pluck('id')->all() : []))->map(fn ($id) => (int) $id)->all();
+            @endphp
+            @forelse($tags as $tag)
+                <label class="check">
+                    <input
+                        type="checkbox"
+                        name="tags[]"
+                        value="{{ $tag->id }}"
+                        {{ in_array($tag->id, $selectedTags, true) ? 'checked' : '' }}
+                    >
+                    <span>{{ $tag->name }}</span>
+                </label>
+            @empty
+                <p class="muted">No tags available to attach.</p>
+            @endforelse
+        </div>
+    </fieldset>
 </div>
 <div class="form-actions">
     <a class="button secondary" href="{{ isset($issue) ? route('issues.show', $issue) : route('issues.index') }}">Cancel</a>

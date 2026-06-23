@@ -10,15 +10,15 @@
     </div>
 </div>
 
-<form method="GET" action="{{ route('tags.index') }}" class="panel form-panel">
+<form method="GET" action="{{ route('tags.index') }}" class="panel form-panel" id="tags-filter-form">
     <div class="form-grid">
         <label class="full">
             Search
-            <input name="q" value="{{ request('q') }}" placeholder="Search tags">
+            <input name="q" value="{{ request('q') }}" placeholder="Search tags" autocomplete="off">
         </label>
         <div class="form-actions" style="align-items:flex-end;">
-            <button class="button primary">Search</button>
-            <a class="button secondary" href="{{ route('tags.index') }}">Reset</a>
+            <button class="button primary" type="submit">Search</button>
+            <button class="button secondary" type="button" id="tags-reset-button">Reset</button>
         </div>
     </div>
 </form>
@@ -41,27 +41,64 @@
     </div>
 </form>
 
-@if($tags->isEmpty())
-    <div class="empty">
-        <p>No tags found.</p>
-    </div>
-@else
-    <div class="card-grid">
-        @foreach($tags as $tag)
-            <div class="card tag-card">
-                <div class="tag-card-header">
-                    <h2>{{ $tag->name }}</h2>
-                    <form method="POST" action="{{ route('tags.destroy', $tag) }}" onsubmit="return confirm('Delete this tag?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="button link-button danger">Delete</button>
-                    </form>
-                </div>
-                <p>Color: <span style="display:inline-block;width:14px;height:14px;background:{{ $tag->color ?? '#ccc' }};border:1px solid #333;margin-left:0.5rem;vertical-align:middle;"></span></p>
-            </div>
-        @endforeach
-    </div>
+<div id="tags-results">
+    @include('tags.partials.results', ['tags' => $tags])
+</div>
 
-    {{ $tags->links() }}
-@endif
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('tags-filter-form');
+        const results = document.getElementById('tags-results');
+        const searchInput = form?.querySelector('input[name="q"]');
+        const resetButton = document.getElementById('tags-reset-button');
+        let debounceTimer;
+
+        if (!form || !results) {
+            return;
+        }
+
+        async function updateResults(url = null) {
+            const targetUrl = url ?? `${form.action}?${new URLSearchParams(new FormData(form)).toString()}`;
+            const response = await fetch(targetUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            results.innerHTML = await response.text();
+            history.replaceState({}, '', targetUrl);
+        }
+
+        searchInput?.addEventListener('input', function () {
+            window.clearTimeout(debounceTimer);
+            debounceTimer = window.setTimeout(function () {
+                updateResults();
+            }, 300);
+        });
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            updateResults();
+        });
+
+        resetButton?.addEventListener('click', function () {
+            form.reset();
+            updateResults();
+        });
+
+        results.addEventListener('click', function (event) {
+            const link = event.target.closest('.pagination a');
+            if (!link) {
+                return;
+            }
+
+            event.preventDefault();
+            updateResults(link.href);
+        });
+    });
+</script>
 @endsection
