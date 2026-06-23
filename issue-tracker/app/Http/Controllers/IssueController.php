@@ -12,27 +12,22 @@ use Illuminate\Support\Facades\Gate;
 
 class IssueController extends Controller
 {
-
     public function index(Request $request)
     {
         $issues = Issue::query()
-            ->whereHas('project', fn ($query) =>
-                $query->where('owner_id', auth()->id())
+            ->whereHas('project', fn ($query) => $query->where('owner_id', auth()->id())
             )
             ->with(['project'])
             ->when($request->filled('search'), function ($query) use ($request) {
-                $search = '%' . $request->string('search') . '%';
+                $search = '%'.$request->string('search').'%';
 
-                $query->where(fn ($nested) =>
-                    $nested->where('title', 'like', $search)
-                        ->orWhere('description', 'like', $search)
+                $query->where(fn ($nested) => $nested->where('title', 'like', $search)
+                    ->orWhere('description', 'like', $search)
                 );
             })
-            ->when($request->filled('status'), fn ($query) =>
-                $query->where('status', $request->string('status'))
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status'))
             )
-            ->when($request->filled('priority'), fn ($query) =>
-                $query->where('priority', $request->string('priority'))
+            ->when($request->filled('priority'), fn ($query) => $query->where('priority', $request->string('priority'))
             )
             ->latest()
             ->paginate(10)
@@ -44,7 +39,6 @@ class IssueController extends Controller
 
         return view('issues.index', compact('issues'));
     }
-
 
     public function create()
     {
@@ -60,7 +54,6 @@ class IssueController extends Controller
         ]);
     }
 
-
     public function store(StoreIssueRequest $request)
     {
         $validated = $request->validated();
@@ -75,14 +68,12 @@ class IssueController extends Controller
         return redirect()->route('issues.show', $issue)->with('success', 'Issue created.');
     }
 
-
     public function show(Issue $issue)
     {
         Gate::authorize('view', $issue->project);
 
         return view('issues.show', compact('issue'));
     }
-
 
     public function edit(Issue $issue)
     {
@@ -94,7 +85,6 @@ class IssueController extends Controller
 
         return view('issues.edit', compact('issue', 'projects', 'users', 'tags'));
     }
-
 
     public function update(UpdateIssueRequest $request, Issue $issue)
     {
@@ -111,7 +101,6 @@ class IssueController extends Controller
 
         return redirect()->route('issues.show', $issue)->with('success', 'Issue updated.');
     }
-
 
     public function destroy(Issue $issue)
     {

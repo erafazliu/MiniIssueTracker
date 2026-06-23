@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
@@ -16,11 +16,10 @@ class ProjectController extends Controller
     {
         $projects = auth()->user()->projects()
             ->when($request->filled('search'), function ($query) use ($request) {
-                $search = '%' . $request->string('search') . '%';
+                $search = '%'.$request->string('search').'%';
 
-                $query->where(fn ($nested) =>
-                    $nested->where('name', 'like', $search)
-                        ->orWhere('description', 'like', $search)
+                $query->where(fn ($nested) => $nested->where('name', 'like', $search)
+                    ->orWhere('description', 'like', $search)
                 );
             })
             ->latest()

@@ -1,10 +1,10 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\IssueController;
 use App\Http\Controllers\CommentController;
-use App\Http\Controllers\IssueTagController;
+use App\Http\Controllers\IssueController;
 use App\Http\Controllers\IssueMemberController;
+use App\Http\Controllers\IssueTagController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;

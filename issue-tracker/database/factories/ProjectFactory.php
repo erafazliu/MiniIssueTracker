@@ -2,9 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
-
 
 class ProjectFactory extends Factory
 {
@@ -22,7 +20,7 @@ class ProjectFactory extends Factory
         ];
 
         return [
-            'name' => $this->faker->unique()->randomElement($projectNames) . ' ' . $this->faker->year(),
+            'name' => $this->faker->unique()->randomElement($projectNames).' '.$this->faker->year(),
             'description' => $this->faker->sentence(),
         ];
     }
