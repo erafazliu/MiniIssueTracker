@@ -19,7 +19,7 @@ class ProjectPolicy
 
     public function create(User $user): bool
     {
-        return (bool) $user;
+        return $user->projects()->exists();
     }
 
     public function update(User $user, Project $project): bool
