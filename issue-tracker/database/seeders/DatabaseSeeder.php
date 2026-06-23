@@ -13,63 +13,70 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-
     public function run(): void
     {
-        $owner = User::query()->firstOrCreate(
-            [
-                'email' => 'owner@example.com',
-            ],
+        // Create users
+        $owner = User::firstOrCreate(
+            ['email' => 'owner@example.com'],
             [
                 'name' => 'Era Fazliu',
                 'password' => bcrypt('password'),
             ]
         );
 
-        $member = User::query()->firstOrCreate(
-            [
-                'email' => 'member@example.com',
-            ],
+        $member = User::firstOrCreate(
+            ['email' => 'member@example.com'],
             [
                 'name' => 'Arber Fazliu',
                 'password' => bcrypt('password'),
             ]
         );
 
-        // Create tags
-        $tags = Tag::firstOrCreate(['name' => 'Bug'], ['name' => 'Bug']);
-        Tag::firstOrCreate(['name' => 'Feature'], ['name' => 'Feature']);
-        Tag::firstOrCreate(['name' => 'Enhancement'], ['name' => 'Enhancement']);
-        Tag::firstOrCreate(['name' => 'Documentation'], ['name' => 'Documentation']);
-
-        // Create projects
-        $project = Project::firstOrCreate(
-            ['name' => 'Sample Project'],
+        $developer = User::firstOrCreate(
+            ['email' => 'dev@example.com'],
             [
-                'owner_id' => $owner->id,
-                'description' => 'A sample project to get started',
+                'name' => 'Jane Developer',
+                'password' => bcrypt('password'),
             ]
         );
 
-        // Create issues
-        $issue = Issue::firstOrCreate(
-            ['title' => 'Fix login bug', 'project_id' => $project->id],
-            [
-                'description' => 'Users are unable to log in on mobile devices',
-                'status' => 'open',
-                'priority' => 'high',
-                'project_id' => $project->id,
-            ]
-        );
+        $users = [$owner, $member, $developer];
 
-        Issue::firstOrCreate(
-            ['title' => 'Add dark mode', 'project_id' => $project->id],
-            [
-                'description' => 'Implement dark mode for better user experience',
-                'status' => 'in_progress',
-                'priority' => 'medium',
-                'project_id' => $project->id,
-            ]
-        );
+        // Create shared tags
+        $tagNames = ['Bug', 'Feature', 'Enhancement', 'Documentation', 'Design'];
+        $tags = collect();
+        foreach ($tagNames as $name) {
+            $tags->push(Tag::firstOrCreate(['name' => $name]));
+        }
+
+        // Create projects and issues with comments
+        foreach ($users as $user) {
+            // Create 2-3 projects per user
+            $projects = Project::factory(rand(2, 3))->create([
+                'owner_id' => $user->id,
+            ]);
+
+            foreach ($projects as $project) {
+                // Create 3-5 issues per project
+                $issues = Issue::factory(rand(3, 5))->create([
+                    'project_id' => $project->id,
+                ]);
+
+                foreach ($issues as $issue) {
+                    // Randomly attach 1-3 tags to each issue
+                    $tagsToAttach = $tags->random(rand(1, 3))->pluck('id');
+                    $issue->tags()->sync($tagsToAttach);
+
+                    // Create 2-4 comments per issue
+                    for ($i = 0; $i < rand(2, 4); $i++) {
+                        $issue->comments()->create([
+                            'user_id' => $users[array_rand($users)]->id,
+                            'body' => fake()->paragraphs(rand(1, 2), true),
+                        ]);
+                    }
+                }
+            }
+        }
     }
 }
+

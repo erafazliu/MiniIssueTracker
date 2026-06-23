@@ -3,15 +3,43 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="min-h-screen flex items-center justify-center bg-slate-50">
-    <div class="w-full max-w-2xl rounded-3xl bg-white p-10 shadow-xl ring-1 ring-slate-200">
-        <h1 class="text-4xl font-semibold mb-4">Dashboard</h1>
-        <p class="mb-6 text-slate-700">Welcome, {{ auth()->user()->name ?? auth()->user()->email }}.</p>
-
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700">Logout</button>
-        </form>
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">WELCOME</p>
+        <h1>Dashboard</h1>
     </div>
+</div>
+
+<div class="card-grid">
+    <a href="{{ route('projects.index') }}" class="card" style="text-decoration: none;">
+        <div class="eyebrow">MANAGE</div>
+        <h2 style="margin-top: 8px;">Projects</h2>
+        <p style="color: var(--muted);">Create and view all your projects</p>
+    </a>
+
+    <a href="{{ route('issues.index') }}" class="card" style="text-decoration: none;">
+        <div class="eyebrow">TRACK</div>
+        <h2 style="margin-top: 8px;">Issues</h2>
+        <p style="color: var(--muted);">See all issues across your projects</p>
+    </a>
+
+    <a href="{{ route('tags.index') }}" class="card" style="text-decoration: none;">
+        <div class="eyebrow">ORGANIZE</div>
+        <h2 style="margin-top: 8px;">Tags</h2>
+        <p style="color: var(--muted);">Create and manage tags for issues</p>
+    </a>
+</div>
+
+<div class="panel" style="max-width: 420px;">
+    <div class="panel-heading">
+        <h2>Account</h2>
+    </div>
+    <p style="padding: 20px; margin: 0;">
+        Logged in as <strong>{{ auth()->user()->name ?? auth()->user()->email }}</strong>
+    </p>
+    <form method="POST" action="{{ route('logout') }}" style="padding: 0 20px 20px;">
+        @csrf
+        <button type="submit" class="button secondary" style="width: 100%;">Sign out</button>
+    </form>
 </div>
 @endsection

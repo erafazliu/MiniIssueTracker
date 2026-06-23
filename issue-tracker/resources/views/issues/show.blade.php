@@ -45,24 +45,24 @@
 </div>
 
 <div class="panel">
-    <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>Tags</h2>
+    <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 28px;">
+        <h2 style="margin: 0;">Tags</h2>
         @can('update', $issue->project)
             <button id="open-tag-modal" class="button primary" type="button">Manage tags</button>
         @endcan
     </div>
 
-    <div id="tags-list" class="tag-list">
+    <div id="tags-list" class="tag-list" style="padding: 20px 28px 0;">
         @forelse($issue->tags as $tag)
-            <div class="tag-pill" data-tag-id="{{ $tag->id }}">
+            <div class="tag-pill" data-tag-id="{{ $tag->id }}" style="padding: 12px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line);\">
                 <span>{{ $tag->name }}</span>
                 @can('update', $issue->project)
-                    <button class="tag-remove" data-issue-id="{{ $issue->id }}" data-tag-id="{{ $tag->id }}">×</button>
+                    <button class="tag-remove" data-issue-id="{{ $issue->id }}" data-tag-id="{{ $tag->id }}" style=\"background: none; border: none; color: var(--danger); cursor: pointer; font-size: 18px;\">×</button>
                 @endcan
             </div>
         @empty
-            <div class="empty">
-                <p>No tags attached to this issue.</p>
+            <div class="empty" style="padding: 20px 28px; text-align: left;">
+                <p style="margin: 0; color: var(--muted);\">No tags attached to this issue.</p>
             </div>
         @endforelse
     </div>
@@ -85,20 +85,20 @@
 @endcan
 
 <div class="panel">
-    <div class="panel-heading">
-        <h2>Comments</h2>
+    <div class="panel-heading" style="padding: 20px 28px;">
+        <h2 style="margin: 0;">Comments</h2>
     </div>
 
-    <div id="comments-error" class="form-errors" style="display:none; margin-bottom:1rem;"></div>
+    <div id="comments-error" class="form-errors" style="display:none; margin: 20px 28px 1rem;"></div>
 
-    <div id="comments-list">
+    <div id="comments-list" style="padding: 0 28px;">
         @php
             $comments = $issue->comments()->with('user')->latest()->paginate(5);
         @endphp
         @include('comments.partials.list', ['comments' => $comments])
     </div>
 
-    <form id="comment-form" class="panel form-panel" method="POST" action="{{ route('issues.comments.store', $issue) }}">
+    <form id="comment-form" class="panel form-panel" method="POST" action="{{ route('issues.comments.store', $issue) }}" style="margin-top: 1rem;">
         @csrf
         <textarea name="body" id="comment-body" rows="4" placeholder="Write a comment..." required></textarea>
         <button class="button primary" type="submit">Post comment</button>

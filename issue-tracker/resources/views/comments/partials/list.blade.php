@@ -1,6 +1,6 @@
 @if($comments->isEmpty())
-    <div class="panel">
-        <p>No comments yet.</p>
+    <div style="padding: 20px 28px;">
+        <p style="color: var(--muted); margin: 0;">No comments yet. Start the conversation!</p>
     </div>
 @else
     <div class="comment-list">
@@ -9,7 +9,7 @@
         @endforeach
     </div>
 
-    <div class="comments-pagination">
+    <div class="comments-pagination" style="padding: 16px 28px;">
         {{ $comments->links() }}
     </div>
 @endif
