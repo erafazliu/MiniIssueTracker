@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Comment;
 use App\Models\Project;
 
 #[Fillable(['name', 'email', 'password'])]
@@ -29,5 +30,10 @@ class User extends Authenticatable
     public function projects(): HasMany
     {
         return $this->hasMany(Project::class, 'owner_id');
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\IssueController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\IssueTagController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TagController;
@@ -35,6 +36,12 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/issues/{issue}/tags/{tag}', [IssueTagController::class, 'destroy'])
         ->name('issues.tags.destroy');
+
+    Route::get('/issues/{issue}/comments', [CommentController::class, 'index'])
+        ->name('issues.comments.index');
+
+    Route::post('/issues/{issue}/comments', [CommentController::class, 'store'])
+        ->name('issues.comments.store');
 
     Route::post('/logout', [AuthController::class, 'destroy'])
         ->name('logout');

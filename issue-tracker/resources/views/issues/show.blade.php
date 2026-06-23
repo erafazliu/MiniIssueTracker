@@ -45,7 +45,7 @@
 </div>
 
 <div class="panel">
-    <div class="panel-heading">
+    <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
         <h2>Tags</h2>
         @can('update', $issue->project)
             <button id="open-tag-modal" class="button primary" type="button">Manage tags</button>
@@ -84,6 +84,27 @@
     </div>
 @endcan
 
+<div class="panel">
+    <div class="panel-heading">
+        <h2>Comments</h2>
+    </div>
+
+    <div id="comments-error" class="form-errors" style="display:none; margin-bottom:1rem;"></div>
+
+    <div id="comments-list">
+        @php
+            $comments = $issue->comments()->with('user')->latest()->paginate(5);
+        @endphp
+        @include('comments.partials.list', ['comments' => $comments])
+    </div>
+
+    <form id="comment-form" class="panel form-panel" method="POST" action="{{ route('issues.comments.store', $issue) }}">
+        @csrf
+        <textarea name="body" id="comment-body" rows="4" placeholder="Write a comment..." required></textarea>
+        <button class="button primary" type="submit">Post comment</button>
+    </form>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const openModal = document.getElementById('open-tag-modal');
@@ -91,6 +112,12 @@
         const modal = document.getElementById('tag-modal');
         const tagsList = document.getElementById('tags-list');
         const issueId = {{ $issue->id }};
+        const commentsList = document.getElementById('comments-list');
+        const commentsError = document.getElementById('comments-error');
+        const commentForm = document.getElementById('comment-form');
+        const commentBody = document.getElementById('comment-body');
+        const commentsEndpoint = '{{ route('issues.comments.index', $issue) }}';
+        const commentsStoreEndpoint = '{{ route('issues.comments.store', $issue) }}';
 
         if (openModal && modal) {
             openModal.addEventListener('click', () => modal.style.display = 'block');
@@ -133,6 +160,65 @@
                 empty.remove();
             }
         }
+
+        async function loadComments(url = commentsEndpoint) {
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const response = await fetch(url, {
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            commentsList.innerHTML = data.html;
+        }
+
+        if (commentForm) {
+            commentForm.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                commentsError.style.display = 'none';
+                commentsError.innerHTML = '';
+
+                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const response = await fetch(commentsStoreEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ body: commentBody.value }),
+                });
+
+                if (response.status === 422) {
+                    const data = await response.json();
+                    const messages = Object.values(data.errors || {}).flat();
+                    commentsError.innerHTML = messages.map(msg => `<p>${msg}</p>`).join('');
+                    commentsError.style.display = 'block';
+                    return;
+                }
+
+                if (response.ok) {
+                    commentBody.value = '';
+                    await loadComments();
+                }
+            });
+        }
+
+        commentsList?.addEventListener('click', async function (event) {
+            const link = event.target.closest('.comments-pagination a');
+            if (!link) {
+                return;
+            }
+
+            event.preventDefault();
+            await loadComments(link.href);
+        });
 
         tagsList?.addEventListener('click', async function (event) {
             const button = event.target.closest('.tag-remove');
