@@ -43,7 +43,9 @@
 <div class="panel">
     <div class="panel-heading">
         <h2>Issues</h2>
-        <a class="button primary" href="{{ route('issues.create', ['project_id' => $project->id]) }}">New issue</a>
+        @can('update', $project)
+            <a class="button primary" href="{{ route('issues.create', ['project_id' => $project->id]) }}">New issue</a>
+        @endcan
     </div>
 
     @if($project->issues->isEmpty())

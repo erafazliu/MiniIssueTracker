@@ -14,12 +14,18 @@ class ProjectPolicy
 
     public function view(User $user, Project $project): bool
     {
-        return $project->owner_id === $user->id;
+        if ($project->owner_id === $user->id) {
+            return true;
+        }
+
+        return $project->issues()
+            ->whereHas('members', fn ($query) => $query->where('users.id', $user->id))
+            ->exists();
     }
 
     public function create(User $user): bool
     {
-        return $user->projects()->exists();
+        return $user->is_owner;
     }
 
     public function update(User $user, Project $project): bool

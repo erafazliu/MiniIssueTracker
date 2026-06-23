@@ -20,27 +20,34 @@ class DatabaseSeeder extends Seeder
             ['email' => 'owner@example.com'],
             [
                 'name' => 'Era Fazliu',
+                'is_owner' => true,
                 'password' => bcrypt('password'),
             ]
         );
+        $owner->update(['is_owner' => true]);
 
         $member = User::firstOrCreate(
             ['email' => 'member@example.com'],
             [
                 'name' => 'Arber Fazliu',
+                'is_owner' => false,
                 'password' => bcrypt('password'),
             ]
         );
+        $member->update(['is_owner' => false]);
 
         $developer = User::firstOrCreate(
             ['email' => 'dev@example.com'],
             [
                 'name' => 'Jane Developer',
+                'is_owner' => false,
                 'password' => bcrypt('password'),
             ]
         );
+        $developer->update(['is_owner' => false]);
 
-        $users = [$owner, $member, $developer];
+        $users = collect([$owner, $member, $developer]);
+        $members = $users->where('is_owner', false)->values();
 
         // Create shared tags
         $tagNames = ['Bug', 'Feature', 'Enhancement', 'Documentation', 'Design'];
@@ -49,31 +56,34 @@ class DatabaseSeeder extends Seeder
             $tags->push(Tag::firstOrCreate(['name' => $name]));
         }
 
-        // Create projects and issues with comments
-        foreach ($users as $user) {
-            // Create 2-3 projects per user
-            $projects = Project::factory(rand(2, 3))->create([
-                'owner_id' => $user->id,
+        // Create owner projects and assign members to issues
+        $projects = Project::factory(rand(2, 3))->create([
+            'owner_id' => $owner->id,
+        ]);
+
+        foreach ($projects as $project) {
+            // Create 3-5 issues per project
+            $issues = Issue::factory(rand(3, 5))->create([
+                'project_id' => $project->id,
             ]);
 
-            foreach ($projects as $project) {
-                // Create 3-5 issues per project
-                $issues = Issue::factory(rand(3, 5))->create([
-                    'project_id' => $project->id,
-                ]);
+            foreach ($issues as $issue) {
+                // Randomly attach 1-3 tags to each issue
+                $tagsToAttach = $tags->random(rand(1, 3))->pluck('id');
+                $issue->tags()->sync($tagsToAttach);
 
-                foreach ($issues as $issue) {
-                    // Randomly attach 1-3 tags to each issue
-                    $tagsToAttach = $tags->random(rand(1, 3))->pluck('id');
-                    $issue->tags()->sync($tagsToAttach);
+                // Randomly assign 1-2 member users to each issue
+                if ($members->isNotEmpty()) {
+                    $selectedMembers = $members->random(rand(1, min(2, $members->count())));
+                    $issue->members()->sync(collect($selectedMembers)->pluck('id')->all());
+                }
 
-                    // Create 2-4 comments per issue
-                    for ($i = 0; $i < rand(2, 4); $i++) {
-                        $issue->comments()->create([
-                            'user_id' => $users[array_rand($users)]->id,
-                            'body' => fake()->paragraphs(rand(1, 2), true),
-                        ]);
-                    }
+                // Create 2-4 comments per issue
+                for ($i = 0; $i < rand(2, 4); $i++) {
+                    $issue->comments()->create([
+                        'user_id' => $users->random()->id,
+                        'body' => fake()->paragraphs(rand(1, 2), true),
+                    ]);
                 }
             }
         }

@@ -8,9 +8,11 @@
         <p class="eyebrow">Issues</p>
         <h1>Issues</h1>
     </div>
-    <div class="actions">
-        <a class="button primary" href="{{ route('issues.create') }}">New issue</a>
-    </div>
+    @can('create', App\Models\Project::class)
+        <div class="actions">
+            <a class="button primary" href="{{ route('issues.create') }}">New issue</a>
+        </div>
+    @endcan
 </div>
 
 <form method="GET" action="{{ route('issues.index') }}" class="panel form-panel" id="issues-filter-form">

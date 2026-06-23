@@ -50,7 +50,7 @@ class IssueTrackerTest extends TestCase
      */
     public function test_users_can_create_projects()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->owner()->create();
 
         $response = $this->actingAs($user)->post('/projects', [
             'name' => 'Test Project',
@@ -70,7 +70,7 @@ class IssueTrackerTest extends TestCase
      */
     public function test_non_owners_cannot_edit_delete_projects()
     {
-        $owner = User::factory()->create();
+        $owner = User::factory()->owner()->create();
         $other = User::factory()->create();
         $project = Project::factory()->create(['owner_id' => $owner->id]);
 
@@ -90,13 +90,50 @@ class IssueTrackerTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_assigned_members_can_view_owner_projects()
+    {
+        $owner = User::factory()->owner()->create();
+        $member = User::factory()->create();
+        $other = User::factory()->create();
+
+        $assignedProject = Project::factory()->create([
+            'owner_id' => $owner->id,
+            'name' => 'Assigned Project',
+        ]);
+
+        $hiddenProject = Project::factory()->create([
+            'owner_id' => $owner->id,
+            'name' => 'Hidden Project',
+        ]);
+
+        $issue = Issue::factory()->create(['project_id' => $assignedProject->id]);
+        $issue->members()->attach($member->id);
+
+        $response = $this->actingAs($member)->get('/projects');
+        $response->assertOk();
+        $response->assertSee('Assigned Project');
+        $response->assertDontSee('Hidden Project');
+
+        $showAllowed = $this->actingAs($member)->get("/projects/{$assignedProject->id}");
+        $showAllowed->assertOk();
+
+        $showForbidden = $this->actingAs($member)->get("/projects/{$hiddenProject->id}");
+        $showForbidden->assertForbidden();
+
+        $editForbidden = $this->actingAs($member)->get("/projects/{$assignedProject->id}/edit");
+        $editForbidden->assertForbidden();
+
+        $otherForbidden = $this->actingAs($other)->get("/projects/{$assignedProject->id}");
+        $otherForbidden->assertForbidden();
+    }
+
     /**
      * Test 5: Issue results are scoped to the project owner
      */
     public function test_issue_results_are_scoped_to_project_owner()
     {
-        $owner = User::factory()->create();
-        $other = User::factory()->create();
+        $owner = User::factory()->owner()->create();
+        $other = User::factory()->owner()->create();
 
         $ownerProject = Project::factory()->create(['owner_id' => $owner->id]);
         $otherProject = Project::factory()->create(['owner_id' => $other->id]);
@@ -117,7 +154,7 @@ class IssueTrackerTest extends TestCase
      */
     public function test_status_priority_tag_and_search_filters_work()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->owner()->create();
         $project = Project::factory()->create(['owner_id' => $user->id]);
 
         $openIssue = Issue::factory()->create([
@@ -155,7 +192,7 @@ class IssueTrackerTest extends TestCase
      */
     public function test_tags_attach_and_detach_through_json_endpoints()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->owner()->create();
         $project = Project::factory()->create(['owner_id' => $user->id]);
         $issue = Issue::factory()->create(['project_id' => $project->id]);
         $tag = Tag::factory()->create();
@@ -182,7 +219,7 @@ class IssueTrackerTest extends TestCase
      */
     public function test_comments_are_created_through_json_endpoints()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->owner()->create();
         $project = Project::factory()->create(['owner_id' => $user->id]);
         $issue = Issue::factory()->create(['project_id' => $project->id]);
 
@@ -203,7 +240,7 @@ class IssueTrackerTest extends TestCase
      */
     public function test_empty_comments_return_validation_errors()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->owner()->create();
         $project = Project::factory()->create(['owner_id' => $user->id]);
         $issue = Issue::factory()->create(['project_id' => $project->id]);
 
@@ -224,7 +261,7 @@ class IssueTrackerTest extends TestCase
      */
     public function test_members_attach_and_detach_through_json_endpoints()
     {
-        $projectOwner = User::factory()->create();
+        $projectOwner = User::factory()->owner()->create();
         $member = User::factory()->create();
         $project = Project::factory()->create(['owner_id' => $projectOwner->id]);
         $issue = Issue::factory()->create(['project_id' => $project->id]);
@@ -244,5 +281,54 @@ class IssueTrackerTest extends TestCase
             'issue_id' => $issue->id,
             'user_id' => $member->id,
         ]);
+    }
+
+    public function test_members_cannot_create_update_or_delete_resources()
+    {
+        $owner = User::factory()->owner()->create();
+        $member = User::factory()->create();
+
+        $project = Project::factory()->create(['owner_id' => $owner->id]);
+        $issue = Issue::factory()->create(['project_id' => $project->id]);
+        $issue->members()->attach($member->id);
+        $tag = Tag::factory()->create();
+
+        $response = $this->actingAs($member)->get('/projects/create');
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->actingAs($member)->post('/projects', [
+            'name' => 'Should Not Create',
+            'description' => 'Denied for members',
+        ]);
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->actingAs($member)->get('/issues/create');
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->actingAs($member)->post('/issues', [
+            'project_id' => $project->id,
+            'title' => 'Should Not Create',
+            'description' => 'Denied for members',
+            'status' => 'open',
+            'priority' => 'low',
+        ]);
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->actingAs($member)->delete("/issues/{$issue->id}");
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->actingAs($member)->post('/tags', [
+            'name' => 'Denied Tag',
+            'color' => '#000000',
+        ]);
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->actingAs($member)->delete("/tags/{$tag->id}");
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->actingAs($member)->postJson("/issues/{$issue->id}/comments", [
+            'body' => 'Members can still comment',
+        ]);
+        $this->assertSame(201, $response->getStatusCode());
     }
 }

@@ -23,23 +23,25 @@
     </div>
 </form>
 
-<form method="POST" action="{{ route('tags.store') }}" class="panel form-panel">
-    @csrf
-    @include('partials.errors')
-    <div class="form-grid">
-        <label class="full">
-            Name
-            <input name="name" value="{{ old('name') }}" required>
-        </label>
-        <label>
-            Color
-            <input name="color" type="color" value="{{ old('color', '#000000') }}">
-        </label>
-    </div>
-    <div class="form-actions">
-        <button class="button primary">Create tag</button>
-    </div>
-</form>
+@can('create', App\Models\Project::class)
+    <form method="POST" action="{{ route('tags.store') }}" class="panel form-panel">
+        @csrf
+        @include('partials.errors')
+        <div class="form-grid">
+            <label class="full">
+                Name
+                <input name="name" value="{{ old('name') }}" required>
+            </label>
+            <label>
+                Color
+                <input name="color" type="color" value="{{ old('color', '#000000') }}">
+            </label>
+        </div>
+        <div class="form-actions">
+            <button class="button primary">Create tag</button>
+        </div>
+    </form>
+@endcan
 
 <div id="tags-results">
     @include('tags.partials.results', ['tags' => $tags])

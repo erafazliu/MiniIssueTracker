@@ -8,9 +8,11 @@
         <p class="eyebrow">Projects</p>
         <h1>Your projects</h1>
     </div>
-    <div class="actions">
-        <a class="button primary" href="{{ route('projects.create') }}">New project</a>
-    </div>
+    @can('create', App\Models\Project::class)
+        <div class="actions">
+            <a class="button primary" href="{{ route('projects.create') }}">New project</a>
+        </div>
+    @endcan
 </div>
 
 <form method="GET" action="{{ route('projects.index') }}" class="panel form-panel" id="projects-filter-form">

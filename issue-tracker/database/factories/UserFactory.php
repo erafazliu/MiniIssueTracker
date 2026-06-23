@@ -28,9 +28,15 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'is_owner' => false,
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    public function owner(): static
+    {
+        return $this->state(fn () => ['is_owner' => true]);
     }
 
     /**

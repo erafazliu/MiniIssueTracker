@@ -9,7 +9,7 @@ class StoreIssueRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return (bool) auth()->user()?->is_owner;
     }
 
     public function rules(): array

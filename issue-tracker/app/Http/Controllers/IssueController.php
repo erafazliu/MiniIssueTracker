@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreIssueRequest;
 use App\Http\Requests\UpdateIssueRequest;
 use App\Models\Issue;
+use App\Models\Project;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -15,8 +16,10 @@ class IssueController extends Controller
     public function index(Request $request)
     {
         $issues = Issue::query()
-            ->whereHas('project', fn ($query) => $query->where('owner_id', auth()->id())
-            )
+            ->where(function ($query) {
+                $query->whereHas('project', fn ($project) => $project->where('owner_id', auth()->id()))
+                    ->orWhereHas('members', fn ($members) => $members->where('users.id', auth()->id()));
+            })
             ->with(['project'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = '%'.$request->string('search').'%';
@@ -42,6 +45,8 @@ class IssueController extends Controller
 
     public function create()
     {
+        Gate::authorize('create', Project::class);
+
         $projects = auth()->user()->projects()->pluck('name', 'id');
         $users = User::orderBy('name')->get(['id', 'name']);
         $tags = Tag::orderBy('name')->get(['id', 'name']);
@@ -56,6 +61,8 @@ class IssueController extends Controller
 
     public function store(StoreIssueRequest $request)
     {
+        Gate::authorize('create', Project::class);
+
         $validated = $request->validated();
         $memberIds = $validated['members'] ?? [];
         $tagIds = $validated['tags'] ?? [];

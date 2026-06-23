@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTagRequest;
+use App\Models\Project;
 use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class TagController extends Controller
 {
@@ -26,6 +28,8 @@ class TagController extends Controller
 
     public function store(StoreTagRequest $request): RedirectResponse
     {
+        Gate::authorize('create', Project::class);
+
         Tag::firstOrCreate([
             'name' => $request->name,
         ], [
@@ -37,6 +41,8 @@ class TagController extends Controller
 
     public function destroy(Tag $tag): RedirectResponse
     {
+        Gate::authorize('create', Project::class);
+
         $tag->delete();
 
         return redirect()->route('tags.index')->with('success', 'Tag deleted.');

@@ -14,7 +14,11 @@ class ProjectController extends Controller
 {
     public function index(Request $request)
     {
-        $projects = auth()->user()->projects()
+        $projects = Project::query()
+            ->where(function ($query) {
+                $query->where('owner_id', auth()->id())
+                    ->orWhereHas('issues.members', fn ($members) => $members->where('users.id', auth()->id()));
+            })
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = '%'.$request->string('search').'%';
 
@@ -22,6 +26,7 @@ class ProjectController extends Controller
                     ->orWhere('description', 'like', $search)
                 );
             })
+            ->distinct()
             ->latest()
             ->paginate(9)
             ->withQueryString();
@@ -42,6 +47,8 @@ class ProjectController extends Controller
 
     public function store(StoreProjectRequest $request): RedirectResponse
     {
+        Gate::authorize('create', Project::class);
+
         $project = auth()->user()->projects()->create($request->validated());
 
         return redirect()->route('projects.show', $project)->with('success', 'Project created.');
