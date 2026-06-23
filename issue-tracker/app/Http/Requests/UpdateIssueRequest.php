@@ -24,6 +24,8 @@ class UpdateIssueRequest extends FormRequest
             'status' => ['required', Rule::in(['open', 'in_progress', 'closed'])],
             'priority' => ['required', Rule::in(['low', 'medium', 'high'])],
             'due_date' => ['nullable', 'date'],
+            'members' => ['sometimes', 'array'],
+            'members.*' => ['integer', 'distinct', Rule::exists('users', 'id')],
         ];
     }
 }

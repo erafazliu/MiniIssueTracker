@@ -15,3 +15,26 @@
 /* Temporary override: always show header navigation and username */
 .site-header nav{display:flex !important}
 .account>span{display:inline !important}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;backdrop-filter:blur(2px)}
+.modal[style*="display:flex"]{display:flex!important}
+.modal-content{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 20px 60px rgba(15,23,42,.15);width:min(100%,540px);max-width:540px;padding:32px;animation:slideUp .25s ease-out}
+.modal-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px;border-bottom:1px solid var(--line);padding-bottom:16px}
+.modal-header h3{margin:0;font-size:18px;font-weight:700}
+
+/* Tag Actions */
+.tag-actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;padding:12px 0}
+.tag-pill{padding:12px 14px;border-radius:10px;border:1px solid #e5e9f2;background:#f8fafc;color:var(--ink);font-weight:600;font-size:14px;cursor:pointer;transition:all .2s ease;text-align:center}
+.tag-pill:hover{background:#eeedff;border-color:var(--brand)}
+.tag-pill.selected{background:linear-gradient(135deg,#e8e7ff,#f0efff);border-color:var(--brand);color:var(--brand);font-weight:700}
+.list-pill-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;background:#f8fafc;border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
+.list-pill-row:last-child{margin-bottom:0}
+
+/* Member Actions */
+.member-actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;padding:12px 0}
+.member-pill{padding:12px 14px;border-radius:10px;border:1px solid #e5e9f2;background:#f8fafc;color:var(--ink);font-weight:600;font-size:14px;cursor:pointer;transition:all .2s ease;text-align:center}
+.member-pill:hover{background:#eeedff;border-color:var(--brand)}
+.member-pill.selected{background:linear-gradient(135deg,#e8e7ff,#f0efff);border-color:var(--brand);color:var(--brand);font-weight:700}
+
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}

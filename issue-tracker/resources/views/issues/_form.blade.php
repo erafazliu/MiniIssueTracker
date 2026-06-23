@@ -37,6 +37,27 @@
         Due date
         <input type="date" name="due_date" value="{{ old('due_date', isset($issue) && $issue->due_date ? $issue->due_date->format('Y-m-d') : '') }}">
     </label>
+    <fieldset class="full">
+        <legend>Assign members</legend>
+        <div class="stack">
+            @php
+                $selectedMembers = collect(old('members', isset($issue) ? $issue->members->pluck('id')->all() : []))->map(fn ($id) => (int) $id)->all();
+            @endphp
+            @forelse($users as $user)
+                <label class="check">
+                    <input
+                        type="checkbox"
+                        name="members[]"
+                        value="{{ $user->id }}"
+                        {{ in_array($user->id, $selectedMembers, true) ? 'checked' : '' }}
+                    >
+                    <span>{{ $user->name }}</span>
+                </label>
+            @empty
+                <p class="muted">No users available to assign.</p>
+            @endforelse
+        </div>
+    </fieldset>
 </div>
 <div class="form-actions">
     <a class="button secondary" href="{{ isset($issue) ? route('issues.show', $issue) : route('issues.index') }}">Cancel</a>

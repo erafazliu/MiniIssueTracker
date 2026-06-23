@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreIssueRequest;
 use App\Http\Requests\UpdateIssueRequest;
 use App\Models\Issue;
+use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 
 class IssueController extends Controller
@@ -34,17 +35,24 @@ class IssueController extends Controller
     public function create()
     {
         $projects = auth()->user()->projects()->pluck('name', 'id');
+        $users = User::orderBy('name')->get(['id', 'name']);
 
         return view('issues.create', [
             'projects' => $projects,
             'projectId' => request('project_id'),
+            'users' => $users,
         ]);
     }
 
 
     public function store(StoreIssueRequest $request)
     {
-        $issue = Issue::create($request->validated());
+        $validated = $request->validated();
+        $memberIds = $validated['members'] ?? [];
+        unset($validated['members']);
+
+        $issue = Issue::create($validated);
+        $issue->members()->sync($memberIds);
 
         return redirect()->route('issues.show', $issue)->with('success', 'Issue created.');
     }
@@ -63,8 +71,9 @@ class IssueController extends Controller
         Gate::authorize('update', $issue->project);
 
         $projects = auth()->user()->projects()->pluck('name', 'id');
+        $users = User::orderBy('name')->get(['id', 'name']);
 
-        return view('issues.edit', compact('issue', 'projects'));
+        return view('issues.edit', compact('issue', 'projects', 'users'));
     }
 
 
@@ -72,7 +81,12 @@ class IssueController extends Controller
     {
         Gate::authorize('update', $issue->project);
 
-        $issue->update($request->validated());
+        $validated = $request->validated();
+        $memberIds = $validated['members'] ?? [];
+        unset($validated['members']);
+
+        $issue->update($validated);
+        $issue->members()->sync($memberIds);
 
         return redirect()->route('issues.show', $issue)->with('success', 'Issue updated.');
     }
